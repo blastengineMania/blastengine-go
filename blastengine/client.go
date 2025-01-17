@@ -4,6 +4,7 @@ import (
     "crypto/sha256"
     "encoding/base64"
     "strings"
+    "fmt"
 )
 
 type Client struct {
