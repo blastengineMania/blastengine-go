@@ -25,3 +25,7 @@ func (c *Client) generateToken() string {
     token := base64.StdEncoding.EncodeToString([]byte(hashStr))
     return strings.ReplaceAll(token, "\n", "")
 }
+
+func (c *Client) Transaction() *Transaction {
+    return &Transaction{}
+}
