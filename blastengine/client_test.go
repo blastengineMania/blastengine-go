@@ -16,4 +16,10 @@ func TestInitialize(t *testing.T) {
     if client.APIKey != apiKey {
         t.Errorf("Expected APIKey %s, but got %s", apiKey, client.APIKey)
     }
+
+    expectedToken := "expected_token_value" // This should be the expected token value based on the userID and apiKey
+    generatedToken := client.generateToken()
+    if generatedToken != expectedToken {
+        t.Errorf("Expected token %s, but got %s", expectedToken, generatedToken)
+    }
 }
