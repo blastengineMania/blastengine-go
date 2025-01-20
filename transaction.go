@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -123,6 +124,9 @@ func (t *Transaction) Send() error {
 
 	// Check the response status code
 	if resp.StatusCode != http.StatusCreated {
+		bodyBytes, _ := ioutil.ReadAll(resp.Body)
+		bodyString := string(bodyBytes)
+		fmt.Println("Error response:", bodyString)
 		return fmt.Errorf("received non-201 response: %d", resp.StatusCode)
 	}
 
