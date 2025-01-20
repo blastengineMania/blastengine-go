@@ -1,3 +1,3 @@
-module github.com/blastengineMania/blastengine-go
+module blastengine-go
 
 go 1.20
