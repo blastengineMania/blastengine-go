@@ -32,3 +32,8 @@ func (c *Client) generateToken() string {
 
 	return token
 }
+
+func (c *Client) NewTransaction() *Transaction {
+	transaction := &Transaction{Client: c}
+	return transaction
+}

@@ -1,6 +1,8 @@
 package blastenginego
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestInitializeClient(t *testing.T) {
 	apiKey := "testApiKey"

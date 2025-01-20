@@ -1,9 +1,16 @@
 package blastenginego
 
-import "testing"
+import (
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"strings"
+	"testing"
+)
 
 func TestSetFrom(t *testing.T) {
-	transaction := NewTransaction()
+	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	transaction := client.NewTransaction()
 	email := "test@example.com"
 	name := "Test User"
 	transaction.SetFrom(email, name)
@@ -18,7 +25,8 @@ func TestSetFrom(t *testing.T) {
 }
 
 func TestSetSubject(t *testing.T) {
-	transaction := NewTransaction()
+	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	transaction := client.NewTransaction()
 	subject := "Test subject"
 	transaction.SetSubject(subject)
 
@@ -28,7 +36,8 @@ func TestSetSubject(t *testing.T) {
 }
 
 func TestSetTo(t *testing.T) {
-	transaction := NewTransaction()
+	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	transaction := client.NewTransaction()
 	to := "user@example.jp"
 	transaction.SetTo(to)
 
@@ -38,7 +47,8 @@ func TestSetTo(t *testing.T) {
 }
 
 func TestSetCc(t *testing.T) {
-	transaction := NewTransaction()
+	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	transaction := client.NewTransaction()
 	cc := []string{"cc1@example.com", "cc2@example.com"}
 	transaction.SetCc(cc)
 
@@ -54,7 +64,8 @@ func TestSetCc(t *testing.T) {
 }
 
 func TestSetBcc(t *testing.T) {
-	transaction := NewTransaction()
+	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	transaction := client.NewTransaction()
 	bcc := []string{"bcc1@example.com", "bcc2@example.com"}
 	transaction.SetBcc(bcc)
 
@@ -70,7 +81,8 @@ func TestSetBcc(t *testing.T) {
 }
 
 func TestSetInsertCode(t *testing.T) {
-	transaction := NewTransaction()
+	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	transaction := client.NewTransaction()
 	transaction.SetInsertCode("code1", "value1")
 	transaction.SetInsertCode("code2", "value2")
 
@@ -88,7 +100,8 @@ func TestSetInsertCode(t *testing.T) {
 }
 
 func TestSetEncode(t *testing.T) {
-	transaction := NewTransaction()
+	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	transaction := client.NewTransaction()
 	encode := "ISO-8859-1"
 	transaction.SetEncode(encode)
 
@@ -97,14 +110,15 @@ func TestSetEncode(t *testing.T) {
 	}
 
 	// Test default value
-	defaultTransaction := NewTransaction()
+	defaultTransaction := client.NewTransaction()
 	if defaultTransaction.Encode != "UTF-8" {
 		t.Errorf("Expected default Encode to be UTF-8, but got %s", defaultTransaction.Encode)
 	}
 }
 
 func TestSetTextPart(t *testing.T) {
-	transaction := NewTransaction()
+	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	transaction := client.NewTransaction()
 	textPart := "This is a text part"
 	transaction.SetTextPart(textPart)
 
@@ -114,11 +128,55 @@ func TestSetTextPart(t *testing.T) {
 }
 
 func TestSetHtmlPart(t *testing.T) {
-	transaction := NewTransaction()
+	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+
+	transaction := client.NewTransaction()
 	htmlPart := "<p>This is an HTML part</p>"
 	transaction.SetHtmlPart(htmlPart)
 
 	if transaction.HtmlPart != htmlPart {
 		t.Errorf("Expected HtmlPart to be %s, but got %s", htmlPart, transaction.HtmlPart)
+	}
+}
+
+func TestSend(t *testing.T) {
+	// Mock HTTP server
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Errorf("Expected method POST, but got %s", r.Method)
+		}
+
+		if r.URL.EscapedPath() != "/api/v1/deliveries/transaction" {
+			t.Errorf("Expected URL path to be /api/v1/deliveries/transaction, but got %s", r.URL.EscapedPath())
+		}
+
+		if r.Header.Get("Content-Type") != "application/json" {
+			t.Errorf("Expected Content-Type to be application/json, but got %s", r.Header.Get("Content-Type"))
+		}
+
+		if !strings.HasPrefix(r.Header.Get("Authorization"), "Bearer ") {
+			t.Errorf("Expected Authorization header to start with Bearer, but got %s", r.Header.Get("Authorization"))
+		}
+
+		w.WriteHeader(http.StatusCreated)
+	}))
+	defer mockServer.Close()
+	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+
+	transaction := client.NewTransaction()
+	transaction.SetFrom(os.Getenv("FROM"), "Test User")
+	transaction.SetTo(os.Getenv("TO"))
+	transaction.SetSubject("Test subject")
+	transaction.SetTextPart("This is a text part")
+	transaction.SetHtmlPart("<p>This is an HTML part</p>")
+	transaction.Client = &client
+
+	err := transaction.Send()
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err)
+	}
+	// Check delivery id is up to zero
+	if transaction.DeliveryId == 0 {
+		t.Errorf("Expected DeliveryId to be 0, but got %d", transaction.DeliveryId)
 	}
 }
