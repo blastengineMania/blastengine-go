@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
 type Transaction struct {
+	DeliveryId int
 	From       MailAddress
 	To         string
 	Cc         []string
@@ -19,12 +20,6 @@ type Transaction struct {
 	TextPart   string
 	HtmlPart   string
 	Client     *Client
-}
-
-func NewTransaction() *Transaction {
-	return &Transaction{
-		Encode: "UTF-8",
-	}
 }
 
 func (t *Transaction) SetFrom(email, name string) {
@@ -77,15 +72,15 @@ func (t *Transaction) Send() error {
 
 	// Create a temporary struct to hold the modified InsertCode
 	tempTransaction := struct {
-		From       MailAddress        `json:"from"`
-		To         string             `json:"to"`
-		Cc         []string           `json:"cc"`
-		Bcc        []string           `json:"bcc"`
-		InsertCode []map[string]string `json:"insert_code"`
-		Subject    string             `json:"subject"`
-		Encode     string             `json:"encode"`
-		TextPart   string             `json:"text_part"`
-		HtmlPart   string             `json:"html_part"`
+		From       MailAddress         `json:"from"`
+		To         string              `json:"to"`
+		Cc         []string            `json:"cc,omitempty"`
+		Bcc        []string            `json:"bcc,omitempty"`
+		InsertCode []map[string]string `json:"insert_code,omitempty"`
+		Subject    string              `json:"subject"`
+		Encode     string              `json:"encode"`
+		TextPart   string              `json:"text_part"`
+		HtmlPart   string              `json:"html_part,omitempty"`
 	}{
 		From:       t.From,
 		To:         t.To,
@@ -103,7 +98,6 @@ func (t *Transaction) Send() error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal transaction: %v", err)
 	}
-
 	// Create a new HTTP request
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
@@ -124,11 +118,24 @@ func (t *Transaction) Send() error {
 
 	// Check the response status code
 	if resp.StatusCode != http.StatusCreated {
-		bodyBytes, _ := ioutil.ReadAll(resp.Body)
+		bodyBytes, _ := io.ReadAll(resp.Body)
 		bodyString := string(bodyBytes)
 		fmt.Println("Error response:", bodyString)
 		return fmt.Errorf("received non-201 response: %d", resp.StatusCode)
 	}
-
+	// Parse the response body
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %v", err)
+	}
+	// Parse the response JSON
+	var response struct {
+		DeliveryId int `json:"delivery_id"`
+	}
+	err = json.Unmarshal(bodyBytes, &response)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+	t.DeliveryId = response.DeliveryId
 	return nil
 }

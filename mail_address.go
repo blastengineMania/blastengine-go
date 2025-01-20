@@ -1,8 +1,8 @@
 package blastenginego
 
 type MailAddress struct {
-	Email string
-	Name  string
+	Email string `json:"email"`
+	Name  string `json:"name"`
 }
 
 func NewMailAddress(email, name string) MailAddress {
