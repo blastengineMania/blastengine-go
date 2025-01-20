@@ -1,4 +1,4 @@
-package blastenginego
+package blastengine
 
 import (
 	"crypto/sha256"
