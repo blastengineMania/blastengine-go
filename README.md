@@ -10,13 +10,13 @@ package main
 
 import (
 	"fmt"
-	"blastenginego"
+	"blastengine"
 )
 
 func main() {
 	apiKey := "yourApiKey"
 	userId := "yourUserId"
-	client := blastenginego.initializeClient(apiKey, userId)
+	client := blastengine.initializeClient(apiKey, userId)
 	fmt.Println("Client initialized:", client)
 }
 ```
@@ -30,13 +30,13 @@ package main
 
 import (
 	"fmt"
-	"blastenginego"
+	"blastengine"
 )
 
 func main() {
 	apiKey := "yourApiKey"
 	userId := "yourUserId"
-	client := blastenginego.initializeClient(apiKey, userId)
+	client := blastengine.initializeClient(apiKey, userId)
 
 	transaction := client.NewTransaction()
 	transaction.SetFrom("from@example.com", "Sender Name")

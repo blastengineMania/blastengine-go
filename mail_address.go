@@ -1,4 +1,4 @@
-package blastenginego
+package blastengine
 
 type MailAddress struct {
 	Email string `json:"email"`
