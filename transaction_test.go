@@ -3,6 +3,7 @@ package blastenginego
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -147,15 +148,15 @@ func TestSend(t *testing.T) {
 			t.Errorf("Expected Authorization header to start with Bearer, but got %s", r.Header.Get("Authorization"))
 		}
 
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusCreated)
 	}))
 	defer mockServer.Close()
 
-	client := initializeClient("testApiKey", "testUserId")
+	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
 
 	transaction := NewTransaction()
-	transaction.SetFrom("test@example.com", "Test User")
-	transaction.SetTo("user@example.jp")
+	transaction.SetFrom(os.Getenv("FROM"), "Test User")
+	transaction.SetTo(os.Getenv("TO"))
 	transaction.SetSubject("Test subject")
 	transaction.SetTextPart("This is a text part")
 	transaction.SetHtmlPart("<p>This is an HTML part</p>")
