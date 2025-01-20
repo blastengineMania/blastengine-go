@@ -34,6 +34,9 @@ func (c *Client) generateToken() string {
 }
 
 func (c *Client) NewTransaction() *Transaction {
-	transaction := &Transaction{Client: c}
+	transaction := &Transaction{
+		Encode: "UTF-8",
+		Client: c,
+	}
 	return transaction
 }
