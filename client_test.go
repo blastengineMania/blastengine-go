@@ -15,3 +15,16 @@ func TestInitializeClient(t *testing.T) {
 		t.Errorf("Expected userId to be %s, but got %s", userId, client.userId)
 	}
 }
+
+func TestGenerateToken(t *testing.T) {
+	apiKey := "testApiKey"
+	userId := "testUserId"
+	client := initializeClient(apiKey, userId)
+
+	expectedToken := "NGY4YjlhNzE0OWYzMTFiNDE5OTJhMmJlYTQxMDlkMmE4MmY1MTNhZWVjNWVhZDRiOGFkNzgxYzZmZmY3MTZjNg=="
+	token := client.generateToken()
+
+	if token != expectedToken {
+		t.Errorf("Expected token to be %s, but got %s", expectedToken, token)
+	}
+}
