@@ -3,6 +3,7 @@ package blastenginego
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 )
 
 type Client struct {
@@ -23,8 +24,11 @@ func (c *Client) generateToken() string {
 	// Generate SHA256 hash
 	hash := sha256.Sum256([]byte(concatenated))
 
-	// Base64 encode the hash string
-	token := base64.StdEncoding.EncodeToString(hash[:])
+	// Convert the hash to a lowercase hexadecimal string
+	hexString := hex.EncodeToString(hash[:])
+
+	// Base64 encode the lowercase hexadecimal string
+	token := base64.URLEncoding.EncodeToString([]byte(hexString))
 
 	return token
 }
