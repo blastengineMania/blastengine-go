@@ -28,7 +28,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-
+    environment: Test Env
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
