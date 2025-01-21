@@ -80,15 +80,12 @@ func (t *Transaction) Send() error {
 	}
 }
 
-func (t *Transaction) SendText() error {
-	url := "https://app.engn.jp/api/v1/deliveries/transaction"
-
+func (t *Transaction) GenerateJson() ([]byte, error) {
 	// Convert InsertCode map to array of key-value pairs with __キー__ format
 	insertCodeArray := make([]map[string]string, 0, len(t.InsertCode))
 	for key, value := range t.InsertCode {
 		insertCodeArray = append(insertCodeArray, map[string]string{"key": "__" + key + "__", "value": value})
 	}
-
 	// Create a temporary struct to hold the modified InsertCode
 	tempTransaction := struct {
 		From       MailAddress         `json:"from"`
@@ -113,7 +110,13 @@ func (t *Transaction) SendText() error {
 	}
 
 	// Marshal the temporary struct to JSON
-	jsonData, err := json.Marshal(tempTransaction)
+	return json.Marshal(tempTransaction)
+}
+
+func (t *Transaction) SendText() error {
+	url := "https://app.engn.jp/api/v1/deliveries/transaction"
+
+	jsonData, err := t.GenerateJson()
 	if err != nil {
 		return fmt.Errorf("failed to marshal transaction: %v", err)
 	}
@@ -131,37 +134,7 @@ func (t *Transaction) SendText() error {
 func (t *Transaction) SendMultipart() error {
 	url := "https://app.engn.jp/api/v1/deliveries/transaction"
 
-	// Convert InsertCode map to array of key-value pairs with __キー__ format
-	insertCodeArray := make([]map[string]string, 0, len(t.InsertCode))
-	for key, value := range t.InsertCode {
-		insertCodeArray = append(insertCodeArray, map[string]string{"key": "__" + key + "__", "value": value})
-	}
-
-	// Create a temporary struct to hold the modified InsertCode
-	tempTransaction := struct {
-		From       MailAddress         `json:"from"`
-		To         string              `json:"to"`
-		Cc         []string            `json:"cc,omitempty"`
-		Bcc        []string            `json:"bcc,omitempty"`
-		InsertCode []map[string]string `json:"insert_code,omitempty"`
-		Subject    string              `json:"subject"`
-		Encode     string              `json:"encode"`
-		TextPart   string              `json:"text_part"`
-		HtmlPart   string              `json:"html_part,omitempty"`
-	}{
-		From:       t.From,
-		To:         t.To,
-		Cc:         t.Cc,
-		Bcc:        t.Bcc,
-		InsertCode: insertCodeArray,
-		Subject:    t.Subject,
-		Encode:     t.Encode,
-		TextPart:   t.TextPart,
-		HtmlPart:   t.HtmlPart,
-	}
-
-	// Marshal the temporary struct to JSON
-	jsonData, err := json.Marshal(tempTransaction)
+	jsonData, err := t.GenerateJson()
 	if err != nil {
 		return fmt.Errorf("failed to marshal transaction: %v", err)
 	}
