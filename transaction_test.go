@@ -1,6 +1,7 @@
 package blastengine
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -118,6 +119,7 @@ func TestSetEncode(t *testing.T) {
 	if defaultTransaction.Encode != "UTF-8" {
 		t.Errorf("Expected default Encode to be UTF-8, but got %s", defaultTransaction.Encode)
 	}
+	fmt.Println(defaultTransaction.Encode)
 }
 
 func TestSetTextPart(t *testing.T) {
