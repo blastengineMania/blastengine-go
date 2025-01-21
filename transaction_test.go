@@ -190,3 +190,26 @@ func TestSend(t *testing.T) {
 		t.Errorf("Expected DeliveryId to be 0, but got %d", transaction.DeliveryId)
 	}
 }
+
+func TestSendMultipart(t *testing.T) {
+	client := getClient()
+
+	transaction := client.NewTransaction()
+	transaction.SetFrom(os.Getenv("FROM"), "Test User")
+	transaction.SetTo(os.Getenv("TO"))
+	transaction.SetSubject("Test subject")
+	transaction.SetTextPart("This is a text part")
+	transaction.SetHtmlPart("<p>This is an HTML part</p>")
+	transaction.AddAttachment("README.md")
+	transaction.AddAttachment("LICENSE")
+	transaction.Client = &client
+
+	err := transaction.Send()
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err)
+	}
+	// Check delivery id is up to zero
+	if transaction.DeliveryId == 0 {
+		t.Errorf("Expected DeliveryId to be 0, but got %d", transaction.DeliveryId)
+	}
+}
