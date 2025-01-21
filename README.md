@@ -16,7 +16,7 @@ import (
 func main() {
 	apiKey := "yourApiKey"
 	userId := "yourUserId"
-	client := blastengine.initialize(apiKey, userId)
+	client := blastengine.Initialize(apiKey, userId)
 	fmt.Println("Client initialized:", client)
 }
 ```
@@ -36,7 +36,7 @@ import (
 func main() {
 	apiKey := "yourApiKey"
 	userId := "yourUserId"
-	client := blastengine.initialize(apiKey, userId)
+	client := blastengine.Initialize(apiKey, userId)
 
 	transaction := client.NewTransaction()
 	transaction.SetFrom("from@example.com", "Sender Name")

@@ -10,7 +10,7 @@ import (
 )
 
 func getClient() Client {
-	return initialize(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	return Initialize(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
 }
 
 func TestSetFrom(t *testing.T) {

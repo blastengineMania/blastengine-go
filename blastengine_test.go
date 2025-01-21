@@ -8,7 +8,7 @@ import (
 func TestInitializeClient(t *testing.T) {
 	apiKey := "testApiKey"
 	userId := "testUserId"
-	client := initialize(apiKey, userId)
+	client := Initialize(apiKey, userId)
 	if client.apiKey != apiKey {
 		t.Errorf("Expected apiKey to be %s, but got %s", apiKey, client.apiKey)
 	}
@@ -22,7 +22,7 @@ func TestInitializeClient(t *testing.T) {
 func TestGenerateToken(t *testing.T) {
 	apiKey := "testApiKey"
 	userId := "testUserId"
-	client := initialize(apiKey, userId)
+	client := Initialize(apiKey, userId)
 
 	expectedToken := "NGY4YjlhNzE0OWYzMTFiNDE5OTJhMmJlYTQxMDlkMmE4MmY1MTNhZWVjNWVhZDRiOGFkNzgxYzZmZmY3MTZjNg=="
 	token := client.generateToken()
