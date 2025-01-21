@@ -11,6 +11,11 @@ type Client struct {
 	userId string
 }
 
+func Initialize(apiKey string, userId string) Client {
+	// Initialize the client
+	return Client{apiKey: apiKey, userId: userId}
+}
+
 func (c *Client) generateToken() string {
 	// Concatenate userId and apiKey
 	concatenated := c.userId + c.apiKey
