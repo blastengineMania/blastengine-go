@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"mime/multipart"
+	"net/http"
+	"net/textproto"
 	"os"
 	"path/filepath"
 )
@@ -173,7 +174,10 @@ func (t *Transaction) SendMultipart() error {
 	writer := multipart.NewWriter(&requestBody)
 
 	// Add the JSON data part
-	dataPart, err := writer.CreateFormFile("data", "data.json")
+	partHeaders := textproto.MIMEHeader{}
+	partHeaders.Set("Content-Disposition", `form-data; name="data"`)
+	partHeaders.Set("Content-Type", "application/json")
+	dataPart, err := writer.CreatePart(partHeaders)
 	if err != nil {
 		return fmt.Errorf("failed to create form field: %v", err)
 	}
