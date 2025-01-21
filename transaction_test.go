@@ -51,7 +51,7 @@ func TestSetTo(t *testing.T) {
 	}
 }
 
-func TestSetCc(t *testing.T) {
+func TestAddCc(t *testing.T) {
 	client := getClient()
 	transaction := client.NewTransaction()
 	cc := []string{"cc1@example.com", "cc2@example.com"}
@@ -70,7 +70,7 @@ func TestSetCc(t *testing.T) {
 	}
 }
 
-func TestSetBcc(t *testing.T) {
+func TestAddBcc(t *testing.T) {
 	client := getClient()
 	transaction := client.NewTransaction()
 	bcc := []string{"bcc1@example.com", "bcc2@example.com"}

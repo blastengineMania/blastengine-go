@@ -34,17 +34,15 @@ func (t *Transaction) SetTo(to string) {
 func (t *Transaction) AddCc(cc string) {
 	if t.Cc == nil {
 		t.Cc = make([]string, 0)
-	} else {
-		t.Cc = append(t.Cc, cc)
 	}
+	t.Cc = append(t.Cc, cc)
 }
 
 func (t *Transaction) AddBcc(bcc string) {
 	if t.Bcc == nil {
 		t.Bcc = make([]string, 0)
-	} else {
-		t.Bcc = append(t.Bcc, bcc)
 	}
+	t.Bcc = append(t.Bcc, bcc)
 }
 
 func (t *Transaction) SetInsertCode(key string, value string) {
