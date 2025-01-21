@@ -55,7 +55,9 @@ func TestSetCc(t *testing.T) {
 	client := getClient()
 	transaction := client.NewTransaction()
 	cc := []string{"cc1@example.com", "cc2@example.com"}
-	transaction.SetCc(cc)
+	for _, v := range cc {
+		transaction.AddCc(v)
+	}
 
 	if len(transaction.Cc) != len(cc) {
 		t.Errorf("Expected Cc length to be %d, but got %d", len(cc), len(transaction.Cc))
@@ -72,7 +74,9 @@ func TestSetBcc(t *testing.T) {
 	client := getClient()
 	transaction := client.NewTransaction()
 	bcc := []string{"bcc1@example.com", "bcc2@example.com"}
-	transaction.SetBcc(bcc)
+	for _, v := range bcc {
+		transaction.AddBcc(v)
+	}
 
 	if len(transaction.Bcc) != len(bcc) {
 		t.Errorf("Expected Bcc length to be %d, but got %d", len(bcc), len(transaction.Bcc))
