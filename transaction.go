@@ -71,9 +71,8 @@ func (t *Transaction) SetHtmlPart(htmlPart string) {
 func (t *Transaction) AddAttachment(attachment string) {
 	if t.Attachments == nil {
 		t.Attachments = make([]string, 0)
-	} else {
-		t.Attachments = append(t.Attachments, attachment)
 	}
+	t.Attachments = append(t.Attachments, attachment)
 }
 
 func (t *Transaction) Send() error {
