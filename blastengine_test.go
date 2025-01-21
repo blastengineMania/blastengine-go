@@ -9,7 +9,6 @@ func TestInitializeClient(t *testing.T) {
 	apiKey := "testApiKey"
 	userId := "testUserId"
 	client := initialize(apiKey, userId)
-
 	if client.apiKey != apiKey {
 		t.Errorf("Expected apiKey to be %s, but got %s", apiKey, client.apiKey)
 	}
