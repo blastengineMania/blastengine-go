@@ -9,17 +9,18 @@ import (
 )
 
 type Transaction struct {
-	DeliveryId int
-	From       MailAddress
-	To         string
-	Cc         []string
-	Bcc        []string
-	InsertCode map[string]string
-	Subject    string
-	Encode     string
-	TextPart   string
-	HtmlPart   string
-	Client     *Client
+	DeliveryId  int
+	From        MailAddress
+	To          string
+	Cc          []string
+	Bcc         []string
+	InsertCode  map[string]string
+	Subject     string
+	Encode      string
+	TextPart    string
+	HtmlPart    string
+	Attachments []string
+	Client      *Client
 }
 
 func (t *Transaction) SetFrom(email, name string) {
@@ -30,12 +31,18 @@ func (t *Transaction) SetTo(to string) {
 	t.To = to
 }
 
-func (t *Transaction) SetCc(cc []string) {
-	t.Cc = cc
+func (t *Transaction) AddCc(cc string) {
+	if t.Cc == nil {
+		t.Cc = make([]string, 0)
+	}
+	t.Cc = append(t.Cc, cc)
 }
 
-func (t *Transaction) SetBcc(bcc []string) {
-	t.Bcc = bcc
+func (t *Transaction) AddBcc(bcc string) {
+	if t.Bcc == nil {
+		t.Bcc = make([]string, 0)
+	}
+	t.Bcc = append(t.Bcc, bcc)
 }
 
 func (t *Transaction) SetInsertCode(key string, value string) {
@@ -61,7 +68,22 @@ func (t *Transaction) SetHtmlPart(htmlPart string) {
 	t.HtmlPart = htmlPart
 }
 
+func (t *Transaction) AddAttachment(attachment string) {
+	if t.Attachments == nil {
+		t.Attachments = make([]string, 0)
+	}
+	t.Attachments = append(t.Attachments, attachment)
+}
+
 func (t *Transaction) Send() error {
+	if t.Attachments != nil {
+		return t.SendMultipart()
+	} else {
+		return t.SendText()
+	}
+}
+
+func (t *Transaction) SendText() error {
 	url := "https://app.engn.jp/api/v1/deliveries/transaction"
 
 	// Convert InsertCode map to array of key-value pairs with __キー__ format
@@ -137,5 +159,9 @@ func (t *Transaction) Send() error {
 		return fmt.Errorf("failed to unmarshal response: %v", err)
 	}
 	t.DeliveryId = response.DeliveryId
+	return nil
+}
+
+func (t *Transaction) SendMultipart() error {
 	return nil
 }
