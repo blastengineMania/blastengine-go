@@ -1,15 +1,8 @@
 package blastengine
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
-	"mime/multipart"
-	"net/http"
-	"net/textproto"
-	"os"
-	"path/filepath"
 )
 
 type Transaction struct {
@@ -124,63 +117,19 @@ func (t *Transaction) SendText() error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal transaction: %v", err)
 	}
-	// Create a new HTTP request
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+
+	// Use the sendRequest method from Client
+	deliveryId, err := t.Client.sendRequest(url, jsonData, false, nil)
 	if err != nil {
-		return fmt.Errorf("failed to create request: %v", err)
+		return err
 	}
 
-	// Set request headers
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+t.Client.generateToken())
-
-	// Send the request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to send request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Check the response status code
-	if resp.StatusCode != http.StatusCreated {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		bodyString := string(bodyBytes)
-		fmt.Println("Error response:", bodyString)
-		return fmt.Errorf("received non-201 response: %d", resp.StatusCode)
-	}
-	// Parse the response body
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read response body: %v", err)
-	}
-	// Parse the response JSON
-	var response struct {
-		DeliveryId int `json:"delivery_id"`
-	}
-	err = json.Unmarshal(bodyBytes, &response)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal response: %v", err)
-	}
-	t.DeliveryId = response.DeliveryId
+	t.DeliveryId = deliveryId
 	return nil
 }
 
 func (t *Transaction) SendMultipart() error {
 	url := "https://app.engn.jp/api/v1/deliveries/transaction"
-
-	// Create a buffer to hold the multipart form data
-	var requestBody bytes.Buffer
-	writer := multipart.NewWriter(&requestBody)
-
-	// Add the JSON data part
-	partHeaders := textproto.MIMEHeader{}
-	partHeaders.Set("Content-Disposition", `form-data; name="data"`)
-	partHeaders.Set("Content-Type", "application/json")
-	dataPart, err := writer.CreatePart(partHeaders)
-	if err != nil {
-		return fmt.Errorf("failed to create form field: %v", err)
-	}
 
 	// Convert InsertCode map to array of key-value pairs with __キー__ format
 	insertCodeArray := make([]map[string]string, 0, len(t.InsertCode))
@@ -217,76 +166,12 @@ func (t *Transaction) SendMultipart() error {
 		return fmt.Errorf("failed to marshal transaction: %v", err)
 	}
 
-	_, err = dataPart.Write(jsonData)
+	// Use the sendRequest method from Client
+	deliveryId, err := t.Client.sendRequest(url, jsonData, true, t.Attachments)
 	if err != nil {
-		return fmt.Errorf("failed to write JSON data to form field: %v", err)
+		return err
 	}
 
-	// Add the file parts
-	for _, attachment := range t.Attachments {
-		file, err := os.Open(attachment)
-		if err != nil {
-			return fmt.Errorf("failed to open attachment: %v", err)
-		}
-		defer file.Close()
-
-		filePart, err := writer.CreateFormFile("file", filepath.Base(attachment))
-		if err != nil {
-			return fmt.Errorf("failed to create form file: %v", err)
-		}
-
-		_, err = io.Copy(filePart, file)
-		if err != nil {
-			return fmt.Errorf("failed to copy file content to form file: %v", err)
-		}
-	}
-
-	// Close the multipart writer to set the terminating boundary
-	err = writer.Close()
-	if err != nil {
-		return fmt.Errorf("failed to close multipart writer: %v", err)
-	}
-
-	// Create a new HTTP request
-	req, err := http.NewRequest("POST", url, &requestBody)
-	if err != nil {
-		return fmt.Errorf("failed to create request: %v", err)
-	}
-
-	// Set request headers
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	req.Header.Set("Authorization", "Bearer "+t.Client.generateToken())
-
-	// Send the request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to send request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Check the response status code
-	if resp.StatusCode != http.StatusCreated {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		bodyString := string(bodyBytes)
-		fmt.Println("Error response:", bodyString)
-		return fmt.Errorf("received non-201 response: %d", resp.StatusCode)
-	}
-
-	// Parse the response body
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read response body: %v", err)
-	}
-
-	// Parse the response JSON
-	var response struct {
-		DeliveryId int `json:"delivery_id"`
-	}
-	err = json.Unmarshal(bodyBytes, &response)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal response: %v", err)
-	}
-	t.DeliveryId = response.DeliveryId
+	t.DeliveryId = deliveryId
 	return nil
 }
