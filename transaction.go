@@ -173,7 +173,7 @@ func (t *Transaction) SendMultipart() error {
 	writer := multipart.NewWriter(&requestBody)
 
 	// Add the JSON data part
-	dataPart, err := writer.CreateFormField("data")
+	dataPart, err := writer.CreateFormFile("data", "data.json")
 	if err != nil {
 		return fmt.Errorf("failed to create form field: %v", err)
 	}
