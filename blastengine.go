@@ -11,7 +11,7 @@ type Client struct {
 	userId string
 }
 
-func initializeClient(apiKey string, userId string) Client {
+func initialize(apiKey string, userId string) Client {
 	// Initialize the client
 	c := Client{apiKey: apiKey, userId: userId}
 	return c
@@ -34,6 +34,9 @@ func (c *Client) generateToken() string {
 }
 
 func (c *Client) NewTransaction() *Transaction {
-	transaction := &Transaction{Client: c}
+	transaction := &Transaction{
+		Client: c,
+		Encode: "UTF-8",
+	}
 	return transaction
 }

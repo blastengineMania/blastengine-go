@@ -8,8 +8,12 @@ import (
 	"testing"
 )
 
+func getClient() Client {
+	return initialize(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+}
+
 func TestSetFrom(t *testing.T) {
-	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	client := getClient()
 	transaction := client.NewTransaction()
 	email := "test@example.com"
 	name := "Test User"
@@ -25,7 +29,7 @@ func TestSetFrom(t *testing.T) {
 }
 
 func TestSetSubject(t *testing.T) {
-	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	client := getClient()
 	transaction := client.NewTransaction()
 	subject := "Test subject"
 	transaction.SetSubject(subject)
@@ -36,7 +40,7 @@ func TestSetSubject(t *testing.T) {
 }
 
 func TestSetTo(t *testing.T) {
-	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	client := getClient()
 	transaction := client.NewTransaction()
 	to := "user@example.jp"
 	transaction.SetTo(to)
@@ -47,7 +51,7 @@ func TestSetTo(t *testing.T) {
 }
 
 func TestSetCc(t *testing.T) {
-	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	client := getClient()
 	transaction := client.NewTransaction()
 	cc := []string{"cc1@example.com", "cc2@example.com"}
 	transaction.SetCc(cc)
@@ -64,7 +68,7 @@ func TestSetCc(t *testing.T) {
 }
 
 func TestSetBcc(t *testing.T) {
-	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	client := getClient()
 	transaction := client.NewTransaction()
 	bcc := []string{"bcc1@example.com", "bcc2@example.com"}
 	transaction.SetBcc(bcc)
@@ -81,7 +85,7 @@ func TestSetBcc(t *testing.T) {
 }
 
 func TestSetInsertCode(t *testing.T) {
-	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	client := getClient()
 	transaction := client.NewTransaction()
 	transaction.SetInsertCode("code1", "value1")
 	transaction.SetInsertCode("code2", "value2")
@@ -100,7 +104,7 @@ func TestSetInsertCode(t *testing.T) {
 }
 
 func TestSetEncode(t *testing.T) {
-	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	client := getClient()
 	transaction := client.NewTransaction()
 	encode := "ISO-8859-1"
 	transaction.SetEncode(encode)
@@ -117,7 +121,7 @@ func TestSetEncode(t *testing.T) {
 }
 
 func TestSetTextPart(t *testing.T) {
-	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	client := getClient()
 	transaction := client.NewTransaction()
 	textPart := "This is a text part"
 	transaction.SetTextPart(textPart)
@@ -128,7 +132,7 @@ func TestSetTextPart(t *testing.T) {
 }
 
 func TestSetHtmlPart(t *testing.T) {
-	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	client := getClient()
 
 	transaction := client.NewTransaction()
 	htmlPart := "<p>This is an HTML part</p>"
@@ -161,7 +165,7 @@ func TestSend(t *testing.T) {
 		w.WriteHeader(http.StatusCreated)
 	}))
 	defer mockServer.Close()
-	client := initializeClient(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
+	client := getClient()
 
 	transaction := client.NewTransaction()
 	transaction.SetFrom(os.Getenv("FROM"), "Test User")
