@@ -89,6 +89,55 @@ func main() {
 }
 ```
 
+## Bulk Usage
+
+To use bulk with the Blastengine client, you can follow this example:
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/blastengineMania/blastengine-go"
+)
+
+func main() {
+	apiKey := "yourApiKey"
+	userId := "yourUserId"
+	client := blastengine.Initialize(apiKey, userId)
+
+	bulk := client.NewBulk()
+	bulk.SetFrom("from@example.com", "Sender Name")
+	bulk.SetSubject("Test Subject")
+	bulk.SetTextPart("This is a text part")
+	bulk.SetHtmlPart("<p>This is an HTML part</p>")
+
+	err := bulk.Begin()
+	if err != nil {
+		fmt.Println("Failed to create bulk:", err)
+	} else {
+		fmt.Println("Bulk created successfully")
+	}
+
+	bulk.Cancel()
+	bulk.Delete()
+}
+```
+
+## Get email information
+
+```go
+transaction.SetDeliveryId(1000)
+transaction.Get()
+// or
+bulk.SetDeliveryId(1000)
+bulk.Get()
+
+bulk.CreatedTime // time.Time
+bulk.DeliveryType // BULK
+transaction.DeliveryType // TRANSACTION
+```
+
 ## License
 
 MIT

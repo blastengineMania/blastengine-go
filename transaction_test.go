@@ -2,10 +2,7 @@ package blastengine
 
 import (
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -13,7 +10,7 @@ func getClient() Client {
 	return Initialize(os.Getenv("API_KEY"), os.Getenv("USER_ID"))
 }
 
-func TestSetFrom(t *testing.T) {
+func TestTransactionSetFrom(t *testing.T) {
 	client := getClient()
 	transaction := client.NewTransaction()
 	email := "test@example.com"
@@ -29,7 +26,7 @@ func TestSetFrom(t *testing.T) {
 	}
 }
 
-func TestSetSubject(t *testing.T) {
+func TestTransactionSetSubject(t *testing.T) {
 	client := getClient()
 	transaction := client.NewTransaction()
 	subject := "Test subject"
@@ -40,7 +37,7 @@ func TestSetSubject(t *testing.T) {
 	}
 }
 
-func TestSetTo(t *testing.T) {
+func TestTransactionSetTo(t *testing.T) {
 	client := getClient()
 	transaction := client.NewTransaction()
 	to := "user@example.jp"
@@ -51,7 +48,7 @@ func TestSetTo(t *testing.T) {
 	}
 }
 
-func TestAddCc(t *testing.T) {
+func TestTransactionAddCc(t *testing.T) {
 	client := getClient()
 	transaction := client.NewTransaction()
 	cc := []string{"cc1@example.com", "cc2@example.com"}
@@ -70,7 +67,7 @@ func TestAddCc(t *testing.T) {
 	}
 }
 
-func TestAddBcc(t *testing.T) {
+func TestTransactionAddBcc(t *testing.T) {
 	client := getClient()
 	transaction := client.NewTransaction()
 	bcc := []string{"bcc1@example.com", "bcc2@example.com"}
@@ -89,7 +86,7 @@ func TestAddBcc(t *testing.T) {
 	}
 }
 
-func TestSetInsertCode(t *testing.T) {
+func TestTransactionSetInsertCode(t *testing.T) {
 	client := getClient()
 	transaction := client.NewTransaction()
 	transaction.SetInsertCode("code1", "value1")
@@ -108,7 +105,7 @@ func TestSetInsertCode(t *testing.T) {
 	}
 }
 
-func TestSetEncode(t *testing.T) {
+func TestTransactionSetEncode(t *testing.T) {
 	client := getClient()
 	transaction := client.NewTransaction()
 	encode := "ISO-8859-1"
@@ -126,7 +123,7 @@ func TestSetEncode(t *testing.T) {
 	fmt.Println(defaultTransaction.Encode)
 }
 
-func TestSetTextPart(t *testing.T) {
+func TestTransactionSetTextPart(t *testing.T) {
 	client := getClient()
 	transaction := client.NewTransaction()
 	textPart := "This is a text part"
@@ -137,7 +134,7 @@ func TestSetTextPart(t *testing.T) {
 	}
 }
 
-func TestSetHtmlPart(t *testing.T) {
+func TestTransactionSetHtmlPart(t *testing.T) {
 	client := getClient()
 
 	transaction := client.NewTransaction()
@@ -149,28 +146,8 @@ func TestSetHtmlPart(t *testing.T) {
 	}
 }
 
-func TestSend(t *testing.T) {
+func TestTransactionSend(t *testing.T) {
 	// Mock HTTP server
-	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			t.Errorf("Expected method POST, but got %s", r.Method)
-		}
-
-		if r.URL.EscapedPath() != "/api/v1/deliveries/transaction" {
-			t.Errorf("Expected URL path to be /api/v1/deliveries/transaction, but got %s", r.URL.EscapedPath())
-		}
-
-		if r.Header.Get("Content-Type") != "application/json" {
-			t.Errorf("Expected Content-Type to be application/json, but got %s", r.Header.Get("Content-Type"))
-		}
-
-		if !strings.HasPrefix(r.Header.Get("Authorization"), "Bearer ") {
-			t.Errorf("Expected Authorization header to start with Bearer, but got %s", r.Header.Get("Authorization"))
-		}
-
-		w.WriteHeader(http.StatusCreated)
-	}))
-	defer mockServer.Close()
 	client := getClient()
 
 	transaction := client.NewTransaction()
@@ -189,9 +166,31 @@ func TestSend(t *testing.T) {
 	if transaction.DeliveryId == 0 {
 		t.Errorf("Expected DeliveryId to be 0, but got %d", transaction.DeliveryId)
 	}
+	err = transaction.Get()
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err)
+	}
+	if transaction.DeliveryId == 0 {
+		t.Errorf("Expected DeliveryId to be not 0, but got 0")
+	}
+	if transaction.Status != "SENT" {
+		t.Errorf("Expected Status to be sent, but got %s", transaction.Status)
+	}
+	if transaction.DeliveryType != "TRANSACTION" {
+		t.Errorf("Expected deliveryType to be TRANSACTION, but got %s", transaction.DeliveryType)
+	}
+	if transaction.CreatedTime.IsZero() {
+		t.Errorf("Expected createdTime to be zero, but got %v", transaction.CreatedTime)
+	}
+	if !transaction.ReservationTime.IsZero() {
+		t.Errorf("Expected reservationTime to be not zero, but got zero")
+	}
+	if transaction.UpdatedTime.IsZero() {
+		t.Errorf("Expected updatedTime to be not zero, but got zero")
+	}
 }
 
-func TestSendMultipart(t *testing.T) {
+func TestTransactionSendMultipart(t *testing.T) {
 	client := getClient()
 
 	transaction := client.NewTransaction()
@@ -208,6 +207,7 @@ func TestSendMultipart(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error, but got %v", err)
 	}
+
 	// Check delivery id is up to zero
 	if transaction.DeliveryId == 0 {
 		t.Errorf("Expected DeliveryId to be 0, but got %d", transaction.DeliveryId)

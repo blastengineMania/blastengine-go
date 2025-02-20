@@ -18,6 +18,12 @@ type Transaction struct {
 	HtmlPart    string
 	Attachments []string
 	Client      *Client
+	Delivery
+}
+
+func (t *Transaction) SetDeliveryId(deliveryId int) {
+	t.DeliveryId = deliveryId
+	t.Delivery.DeliveryId = deliveryId
 }
 
 func (t *Transaction) SetFrom(email, name string) {
@@ -122,12 +128,19 @@ func (t *Transaction) SendText() error {
 	}
 
 	// Use the sendRequest method from Client
-	deliveryId, err := t.Client.sendRequest(url, jsonData, false, nil)
+	bodyBytes, err := t.Client.sendRequest("POST", url, nil, jsonData, false, nil)
 	if err != nil {
 		return err
 	}
-
-	t.DeliveryId = deliveryId
+	var response struct {
+		DeliveryId int `json:"delivery_id"`
+	}
+	err = json.Unmarshal(bodyBytes, &response)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+	t.DeliveryId = response.DeliveryId
+	t.Delivery.DeliveryId = response.DeliveryId
 	return nil
 }
 
@@ -140,11 +153,18 @@ func (t *Transaction) SendMultipart() error {
 	}
 
 	// Use the sendRequest method from Client
-	deliveryId, err := t.Client.sendRequest(url, jsonData, true, t.Attachments)
+	bodyBytes, err := t.Client.sendRequest("POST", url, nil, jsonData, true, t.Attachments)
 	if err != nil {
 		return err
 	}
-
-	t.DeliveryId = deliveryId
+	var response struct {
+		DeliveryId int `json:"delivery_id"`
+	}
+	err = json.Unmarshal(bodyBytes, &response)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+	t.DeliveryId = response.DeliveryId
+	t.Delivery.DeliveryId = response.DeliveryId
 	return nil
 }
