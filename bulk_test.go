@@ -2,6 +2,7 @@ package blastengine
 
 import (
 	"fmt"
+	"os"
 	"testing"
 )
 
@@ -39,8 +40,8 @@ func TestBulkSetTo(t *testing.T) {
 	insertCode := map[string]string{
 		"key": "value",
 	}
-	bulk.SetTo(to, insertCode)
-
+	bulk.AddTo(to, insertCode)
+	bulk.AddTo(to, nil)
 	if bulk.To == nil {
 		t.Errorf("Expected To to be not nil, but got nil")
 	}
@@ -131,6 +132,65 @@ func TestBulkBegin(t *testing.T) {
 		t.Errorf("Expected updatedTime to be not zero, but got zero")
 	}
 	err = bulk.Delete()
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+}
+
+func TestBulkUpdate(t *testing.T) {
+	client := getClient()
+	bulk := client.NewBulk()
+	email := "test@example.com"
+	name := "Test User"
+	bulk.SetFrom(email, name)
+	bulk.SetSubject("Test subject")
+	bulk.SetTextPart("This is a text part")
+	err := bulk.Begin()
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	to := "user@example.jp"
+	insertCode := map[string]string{
+		"key": "value",
+	}
+	bulk.AddTo(to, insertCode)
+	err = bulk.Update()
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	err = bulk.Get()
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	bulk.Delete()
+}
+
+func TestBulkSendNow(t *testing.T) {
+	client := getClient()
+	bulk := client.NewBulk()
+	email := os.Getenv("FROM")
+	name := "Test User"
+	bulk.SetFrom(email, name)
+	bulk.SetSubject("Test subject __key__")
+	bulk.SetTextPart("This is a text part __key__")
+	err := bulk.Begin()
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	to := "atsushi+be@moongift.co.jp"
+	insertCode := map[string]string{
+		"key": "001",
+	}
+	bulk.AddTo(to, insertCode)
+	err = bulk.Update()
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	err = bulk.Send(nil)
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	err = bulk.Get()
 	if err != nil {
 		t.Errorf("Expected error to be nil, but got %v", err)
 	}
