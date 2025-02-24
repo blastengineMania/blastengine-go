@@ -11,8 +11,6 @@ import (
 	"net/http"
 	"net/textproto"
 	"net/url"
-	"os"
-	"path/filepath"
 )
 
 type Client struct {
@@ -23,6 +21,16 @@ type Client struct {
 type Response struct {
 	DeliveryId int `json:"delivery_id"`
 	JobId      int `json:"job_id"`
+}
+
+type Attachment struct {
+	FileName string
+	Content  io.Reader
+}
+
+type ListUnsubscribeParams struct {
+	Email string `json:"mailto,omitempty"`
+	Url   string `json:"url,omitempty"`
 }
 
 func Initialize(apiKey string, userId string) Client {
@@ -64,7 +72,7 @@ func (c *Client) NewBulk() *Bulk {
 	return bulk
 }
 
-func (c *Client) sendRequest(method string, baseUrl string, queries url.Values, jsonData []byte, isMultipart bool, attachments []string) ([]byte, error) {
+func (c *Client) sendRequest(method string, baseUrl string, queries url.Values, jsonData []byte, isMultipart bool, attachments []Attachment) ([]byte, error) {
 	var req *http.Request
 	var err error
 	u, err := url.Parse(baseUrl)
@@ -91,20 +99,13 @@ func (c *Client) sendRequest(method string, baseUrl string, queries url.Values, 
 		}
 
 		for _, attachment := range attachments {
-			file, err := os.Open(attachment)
+			filePart, err := writer.CreateFormFile("file", attachment.FileName)
 			if err != nil {
-				return nil, fmt.Errorf("failed to open attachment: %v", err)
+				return nil, fmt.Errorf("failed to create form field: %v", err)
 			}
-			defer file.Close()
-
-			filePart, err := writer.CreateFormFile("file", filepath.Base(attachment))
+			_, err = io.Copy(filePart, attachment.Content)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create form file: %v", err)
-			}
-
-			_, err = io.Copy(filePart, file)
-			if err != nil {
-				return nil, fmt.Errorf("failed to copy file content to form file: %v", err)
+				return nil, fmt.Errorf("failed to write file to form field: %v", err)
 			}
 		}
 

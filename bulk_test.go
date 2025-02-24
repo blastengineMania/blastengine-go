@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestBulkSetFrom(t *testing.T) {
@@ -194,4 +195,140 @@ func TestBulkSendNow(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error to be nil, but got %v", err)
 	}
+}
+
+func TestBulkSendNowListUnsubscribe(t *testing.T) {
+	client := getClient()
+	bulk := client.NewBulk()
+	email := os.Getenv("FROM")
+	name := "Test User"
+	bulk.SetFrom(email, name)
+	bulk.SetSubject("Test subject __key__")
+	bulk.SetTextPart("This is a text part __key__")
+	bulk.SetListUnsubscribe(&ListUnsubscribeParams{
+		Url: "https://example.com/unsubscribe",
+	})
+	err := bulk.Begin()
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	to := "atsushi+be@moongift.co.jp"
+	insertCode := map[string]string{
+		"key": "001",
+	}
+	bulk.AddTo(to, insertCode)
+	err = bulk.Update()
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	err = bulk.Send(nil)
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	err = bulk.Get()
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+}
+
+func TestGenerateCSVString(t *testing.T) {
+	client := getClient()
+	bulk := client.NewBulk()
+	to := "atsushi+be@moongift.co.jp"
+	insertCode := map[string]string{
+		"key": "001",
+	}
+	bulk.AddTo(to, insertCode)
+	csvString, err := bulk.CreateCSVString()
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	if csvString == "" {
+		t.Errorf("Expected csvString to be not empty, but got empty")
+	}
+	fmt.Print(csvString)
+}
+
+func TestBulkImport(t *testing.T) {
+	client := getClient()
+	bulk := client.NewBulk()
+	email := os.Getenv("FROM")
+	name := "Test User"
+	bulk.SetFrom(email, name)
+	bulk.SetSubject("Test subject __key__")
+	bulk.SetTextPart("This is a text part __key__")
+	err := bulk.Begin()
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	to := "atsushi+be@moongift.co.jp"
+	insertCode := map[string]string{
+		"key": "001",
+	}
+	bulk.AddTo(to, insertCode)
+	job, err := bulk.Import(nil)
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	for {
+		b, err := job.Finished()
+		if err != nil {
+			t.Errorf("Expected error to be nil, but got %v", err)
+		}
+		if b {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+	err = bulk.Send(nil)
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+}
+
+func TestBulkImportError(t *testing.T) {
+	client := getClient()
+	bulk := client.NewBulk()
+	email := os.Getenv("FROM")
+	name := "Test User"
+	bulk.SetFrom(email, name)
+	bulk.SetSubject("Test subject __key__")
+	bulk.SetTextPart("This is a text part __key__")
+	err := bulk.Begin()
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	to := "atsushi+be@moongift.co.jp"
+	insertCode := map[string]string{
+		"key": "001",
+	}
+	bulk.AddTo(to, insertCode)
+	to2 := "atsushi+be@"
+	insertCode2 := map[string]string{
+		"key": "001",
+	}
+	bulk.AddTo(to2, insertCode2)
+	job, err := bulk.Import(&ImportParams{
+		IgnoreErrors: false,
+		Immediate:    true,
+	})
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	for {
+		b, err := job.Finished()
+		if err != nil {
+			t.Errorf("Expected error to be nil, but got %v", err)
+		}
+		if b {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+	s, err := job.Download()
+	if err != nil {
+		t.Errorf("Expected error to be nil, but got %v", err)
+	}
+	fmt.Print(s)
+	bulk.Delete()
 }

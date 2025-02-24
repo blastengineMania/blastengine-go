@@ -3,21 +3,24 @@ package blastengine
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 )
 
 type Transaction struct {
-	DeliveryId  int
-	From        MailAddress
-	To          string
-	Cc          []string
-	Bcc         []string
-	InsertCode  map[string]string
-	Subject     string
-	Encode      string
-	TextPart    string
-	HtmlPart    string
-	Attachments []string
-	Client      *Client
+	DeliveryId      int
+	From            MailAddress
+	To              string
+	Cc              []string
+	Bcc             []string
+	InsertCode      map[string]string
+	Subject         string
+	Encode          string
+	TextPart        string
+	HtmlPart        string
+	ListUnsubscribe *ListUnsubscribeParams
+	Attachments     []string
+	Client          *Client
 	Delivery
 }
 
@@ -71,6 +74,16 @@ func (t *Transaction) SetHtmlPart(htmlPart string) {
 	t.HtmlPart = htmlPart
 }
 
+func (t *Transaction) SetListUnsubscribe(params *ListUnsubscribeParams) {
+	if params.Email != "" {
+		params.Email = fmt.Sprintf("mailto:%s", params.Email)
+	}
+	t.ListUnsubscribe = &ListUnsubscribeParams{
+		Email: params.Email,
+		Url:   params.Url,
+	}
+}
+
 func (t *Transaction) AddAttachment(attachment string) {
 	if t.Attachments == nil {
 		t.Attachments = make([]string, 0)
@@ -94,27 +107,28 @@ func (t *Transaction) GenerateJson() ([]byte, error) {
 	}
 	// Create a temporary struct to hold the modified InsertCode
 	tempTransaction := struct {
-		From       MailAddress         `json:"from"`
-		To         string              `json:"to"`
-		Cc         []string            `json:"cc,omitempty"`
-		Bcc        []string            `json:"bcc,omitempty"`
-		InsertCode []map[string]string `json:"insert_code,omitempty"`
-		Subject    string              `json:"subject"`
-		Encode     string              `json:"encode"`
-		TextPart   string              `json:"text_part"`
-		HtmlPart   string              `json:"html_part,omitempty"`
+		From            MailAddress            `json:"from"`
+		To              string                 `json:"to"`
+		Cc              []string               `json:"cc,omitempty"`
+		Bcc             []string               `json:"bcc,omitempty"`
+		InsertCode      []map[string]string    `json:"insert_code,omitempty"`
+		Subject         string                 `json:"subject"`
+		Encode          string                 `json:"encode"`
+		TextPart        string                 `json:"text_part"`
+		HtmlPart        string                 `json:"html_part,omitempty"`
+		ListUnsubscribe *ListUnsubscribeParams `json:"list_unsubscribe,omitempty"`
 	}{
-		From:       t.From,
-		To:         t.To,
-		Cc:         t.Cc,
-		Bcc:        t.Bcc,
-		InsertCode: insertCodeArray,
-		Subject:    t.Subject,
-		Encode:     t.Encode,
-		TextPart:   t.TextPart,
-		HtmlPart:   t.HtmlPart,
+		From:            t.From,
+		To:              t.To,
+		Cc:              t.Cc,
+		Bcc:             t.Bcc,
+		InsertCode:      insertCodeArray,
+		Subject:         t.Subject,
+		Encode:          t.Encode,
+		TextPart:        t.TextPart,
+		HtmlPart:        t.HtmlPart,
+		ListUnsubscribe: t.ListUnsubscribe,
 	}
-
 	// Marshal the temporary struct to JSON
 	return json.Marshal(tempTransaction)
 }
@@ -152,8 +166,21 @@ func (t *Transaction) SendMultipart() error {
 		return fmt.Errorf("failed to marshal transaction: %v", err)
 	}
 
+	attachments := make([]Attachment, 0, len(t.Attachments))
+	for _, attachment := range t.Attachments {
+		if err != nil {
+			return err
+		}
+		file, err := os.Open(attachment)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		attachments = append(attachments, Attachment{FileName: filepath.Base(attachment), Content: file})
+	}
+
 	// Use the sendRequest method from Client
-	bodyBytes, err := t.Client.sendRequest("POST", url, nil, jsonData, true, t.Attachments)
+	bodyBytes, err := t.Client.sendRequest("POST", url, nil, jsonData, true, attachments)
 	if err != nil {
 		return err
 	}

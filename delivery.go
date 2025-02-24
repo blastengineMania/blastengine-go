@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type Attachment struct {
+type DeliveryAttachment struct {
 	DeliveryAttachID int       `json:"delivery_attach_id"`
 	FileName         string    `json:"file_name"`
 	Mime             string    `json:"mime"`
@@ -18,24 +18,24 @@ type Attachment struct {
 type Delivery struct {
 	Client *Client
 
-	DeliveryId      int          `json:"delivery_id"`
-	From            MailAddress  `json:"from"`
-	Status          string       `json:"status"`
-	DeliveryTime    time.Time    `json:"delivery_time"`
-	UpdatedTime     time.Time    `json:"updated_time"`
-	CreatedTime     time.Time    `json:"created_time"`
-	ReservationTime time.Time    `json:"reservation_time"`
-	TextPart        string       `json:"text_part"`
-	HtmlPart        string       `json:"html_part"`
-	DeliveryType    string       `json:"delivery_type"`
-	Subject         string       `json:"subject"`
-	Attaches        []Attachment `json:"attaches"`
-	OpenCount       int          `json:"open_count"`
-	TotalCount      int          `json:"total_count"`
-	SentCount       int          `json:"sent_count"`
-	DropCount       int          `json:"drop_count"`
-	SoftErrorCount  int          `json:"soft_error_count"`
-	HardErrorCount  int          `json:"hard_error_count"`
+	DeliveryId      int                  `json:"delivery_id"`
+	From            MailAddress          `json:"from"`
+	Status          string               `json:"status"`
+	DeliveryTime    time.Time            `json:"delivery_time"`
+	UpdatedTime     time.Time            `json:"updated_time"`
+	CreatedTime     time.Time            `json:"created_time"`
+	ReservationTime time.Time            `json:"reservation_time"`
+	TextPart        string               `json:"text_part"`
+	HtmlPart        string               `json:"html_part"`
+	DeliveryType    string               `json:"delivery_type"`
+	Subject         string               `json:"subject"`
+	Attaches        []DeliveryAttachment `json:"attaches"`
+	OpenCount       int                  `json:"open_count"`
+	TotalCount      int                  `json:"total_count"`
+	SentCount       int                  `json:"sent_count"`
+	DropCount       int                  `json:"drop_count"`
+	SoftErrorCount  int                  `json:"soft_error_count"`
+	HardErrorCount  int                  `json:"hard_error_count"`
 }
 
 func (d *Delivery) Get() error {

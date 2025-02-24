@@ -190,6 +190,53 @@ func TestTransactionSend(t *testing.T) {
 	}
 }
 
+func TestTransactionListUnsubscribe(t *testing.T) {
+	// Mock HTTP server
+	client := getClient()
+
+	transaction := client.NewTransaction()
+	transaction.SetFrom(os.Getenv("FROM"), "Test User")
+	transaction.SetTo(os.Getenv("TO"))
+	transaction.SetSubject("Test subject")
+	transaction.SetTextPart("This is a text part")
+	transaction.SetHtmlPart("<p>This is an HTML part</p>")
+	transaction.SetListUnsubscribe(&ListUnsubscribeParams{
+		Email: os.Getenv("FROM"),
+	})
+	transaction.Client = &client
+
+	err := transaction.Send()
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err)
+	}
+	// Check delivery id is up to zero
+	if transaction.DeliveryId == 0 {
+		t.Errorf("Expected DeliveryId to be 0, but got %d", transaction.DeliveryId)
+	}
+	err = transaction.Get()
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err)
+	}
+	if transaction.DeliveryId == 0 {
+		t.Errorf("Expected DeliveryId to be not 0, but got 0")
+	}
+	if transaction.Status != "SENT" {
+		t.Errorf("Expected Status to be sent, but got %s", transaction.Status)
+	}
+	if transaction.DeliveryType != "TRANSACTION" {
+		t.Errorf("Expected deliveryType to be TRANSACTION, but got %s", transaction.DeliveryType)
+	}
+	if transaction.CreatedTime.IsZero() {
+		t.Errorf("Expected createdTime to be zero, but got %v", transaction.CreatedTime)
+	}
+	if !transaction.ReservationTime.IsZero() {
+		t.Errorf("Expected reservationTime to be not zero, but got zero")
+	}
+	if transaction.UpdatedTime.IsZero() {
+		t.Errorf("Expected updatedTime to be not zero, but got zero")
+	}
+}
+
 func TestTransactionSendMultipart(t *testing.T) {
 	client := getClient()
 
