@@ -124,6 +124,9 @@ func (m *Mail) Send(reservationTime *time.Time) error {
 		if reservationTime != nil {
 			return fmt.Errorf("cc and bcc are not supported in reservation time")
 		}
+		if len(m.To) > 1 {
+			return fmt.Errorf("multiple to is not supported in transaction")
+		}
 		return m.SendTransaction()
 	} else {
 		// Bulk
@@ -151,7 +154,12 @@ func (m *Mail) SendTransaction() error {
 	for _, bcc := range m.Bcc {
 		transaction.AddBcc(bcc)
 	}
-	return transaction.Send()
+	err := transaction.Send()
+	if err != nil {
+		return err
+	}
+	m.DeliveryId = transaction.DeliveryId
+	return nil
 }
 
 func (m *Mail) SendBulk(reservationTime *time.Time) error {
@@ -196,5 +204,10 @@ func (m *Mail) SendBulk(reservationTime *time.Time) error {
 			return err
 		}
 	}
-	return bulk.Send(reservationTime)
+	err = bulk.Send(reservationTime)
+	if err != nil {
+		return err
+	}
+	m.DeliveryId = bulk.DeliveryId
+	return nil
 }

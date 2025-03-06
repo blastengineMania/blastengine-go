@@ -102,9 +102,11 @@ func (c *Client) sendRequest(method string, baseUrl string, queries url.Values, 
 			return nil, fmt.Errorf("failed to create form field: %v", err)
 		}
 
-		_, err = dataPart.Write(jsonData)
-		if err != nil {
-			return nil, fmt.Errorf("failed to write JSON data to form field: %v", err)
+		if len(jsonData) > 2 {
+			_, err = dataPart.Write(jsonData)
+			if err != nil {
+				return nil, fmt.Errorf("failed to write JSON data to form field: %v", err)
+			}
 		}
 
 		for _, attachment := range attachments {
@@ -130,7 +132,7 @@ func (c *Client) sendRequest(method string, baseUrl string, queries url.Values, 
 
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 	} else {
-		if jsonData != nil {
+		if len(jsonData) > 2 {
 			req, err = http.NewRequest(method, u.String(), bytes.NewBuffer(jsonData))
 			if err != nil {
 				return nil, fmt.Errorf("failed to create request: %v", err)
@@ -157,8 +159,7 @@ func (c *Client) sendRequest(method string, baseUrl string, queries url.Values, 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		bodyString := string(bodyBytes)
-		fmt.Println("Error response:", bodyString)
-		return nil, fmt.Errorf("received non-20x response: %d", resp.StatusCode)
+		return nil, fmt.Errorf("received non-20x response: %d, message: %v", resp.StatusCode, bodyString)
 	}
 	return io.ReadAll(resp.Body)
 }

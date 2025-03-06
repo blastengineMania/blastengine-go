@@ -4,6 +4,8 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -131,7 +133,14 @@ func (b *Bulk) CreateCSVString() (string, error) {
 }
 
 func (b *Bulk) Begin() error {
-	url := "https://app.engn.jp/api/v1/deliveries/bulk/begin"
+	if b.Attachments != nil && len(b.Attachments) > 0 {
+		return b.BeginWithAttachments()
+	} else {
+		return b.BeginWithoutAttachments()
+	}
+}
+
+func (b *Bulk) GenerateBeginParams() ([]byte, error) {
 	beginBulk := struct {
 		From            MailAddress            `json:"from"`
 		Subject         string                 `json:"subject"`
@@ -147,11 +156,50 @@ func (b *Bulk) Begin() error {
 		HtmlPart:        b.HtmlPart,
 		ListUnsubscribe: b.ListUnsubscribe,
 	}
-	jsonData, err := json.Marshal(beginBulk)
+	return json.Marshal(beginBulk)
+}
+
+func (b *Bulk) BeginWithAttachments() error {
+	url := "https://app.engn.jp/api/v1/deliveries/bulk/begin"
+	beginBulk, err := b.GenerateBeginParams()
 	if err != nil {
 		return fmt.Errorf("failed to marshal beginBulk: %v", err)
 	}
-	bodyBytes, err := b.Client.sendRequest("POST", url, nil, jsonData, false, nil)
+	attachments := make([]Attachment, 0, len(b.Attachments))
+	for _, attachment := range b.Attachments {
+		if err != nil {
+			return err
+		}
+		file, err := os.Open(attachment)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		attachments = append(attachments, Attachment{FileName: filepath.Base(attachment), Content: file})
+	}
+	bodyBytes, err := b.Client.sendRequest("POST", url, nil, beginBulk, true, attachments)
+	if err != nil {
+		return err
+	}
+	var response struct {
+		DeliveryId int `json:"delivery_id"`
+	}
+	err = json.Unmarshal(bodyBytes, &response)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+	b.DeliveryId = response.DeliveryId
+	b.Mail.DeliveryId = response.DeliveryId
+	return nil
+}
+
+func (b *Bulk) BeginWithoutAttachments() error {
+	url := "https://app.engn.jp/api/v1/deliveries/bulk/begin"
+	beginBulk, err := b.GenerateBeginParams()
+	if err != nil {
+		return fmt.Errorf("failed to marshal beginBulk: %v", err)
+	}
+	bodyBytes, err := b.Client.sendRequest("POST", url, nil, beginBulk, false, nil)
 	if err != nil {
 		return err
 	}
@@ -235,7 +283,10 @@ func (b *Bulk) Import(params *ImportParams) (*Job, error) {
 			Content:  reader,
 		},
 	}
-	jsonData, err := json.Marshal(params)
+	var jsonData []byte
+	if params != nil {
+		jsonData, err = json.Marshal(params)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal import params: %v", err)
 	}
