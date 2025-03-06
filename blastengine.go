@@ -59,7 +59,7 @@ func (c *Client) NewTransaction() *Transaction {
 		Encode: "UTF-8",
 		Client: c,
 	}
-	transaction.Delivery.Client = c
+	transaction.Mail.Client = c
 	return transaction
 }
 
@@ -68,8 +68,17 @@ func (c *Client) NewBulk() *Bulk {
 		Encode: "UTF-8",
 		Client: c,
 	}
-	bulk.Delivery.Client = c
+	bulk.Mail.Client = c
 	return bulk
+}
+
+func (c *Client) NewMail() *Mail {
+	mail := &Mail{
+		Encode: "UTF-8",
+		Client: c,
+	}
+	mail.Client = c
+	return mail
 }
 
 func (c *Client) sendRequest(method string, baseUrl string, queries url.Values, jsonData []byte, isMultipart bool, attachments []Attachment) ([]byte, error) {

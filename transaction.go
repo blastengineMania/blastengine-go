@@ -21,12 +21,12 @@ type Transaction struct {
 	ListUnsubscribe *ListUnsubscribeParams
 	Attachments     []string
 	Client          *Client
-	Delivery
+	Mail
 }
 
 func (t *Transaction) SetDeliveryId(deliveryId int) {
 	t.DeliveryId = deliveryId
-	t.Delivery.DeliveryId = deliveryId
+	t.Mail.DeliveryId = deliveryId
 }
 
 func (t *Transaction) SetFrom(email, name string) {
@@ -154,7 +154,7 @@ func (t *Transaction) SendText() error {
 		return fmt.Errorf("failed to unmarshal response: %v", err)
 	}
 	t.DeliveryId = response.DeliveryId
-	t.Delivery.DeliveryId = response.DeliveryId
+	t.Mail.DeliveryId = response.DeliveryId
 	return nil
 }
 
@@ -192,6 +192,6 @@ func (t *Transaction) SendMultipart() error {
 		return fmt.Errorf("failed to unmarshal response: %v", err)
 	}
 	t.DeliveryId = response.DeliveryId
-	t.Delivery.DeliveryId = response.DeliveryId
+	t.Mail.DeliveryId = response.DeliveryId
 	return nil
 }

@@ -24,7 +24,7 @@ type Bulk struct {
 	Attachments     []string
 	ListUnsubscribe *ListUnsubscribeParams
 	Client          *Client
-	Delivery
+	Mail
 }
 
 type ImportParams struct {
@@ -34,7 +34,7 @@ type ImportParams struct {
 
 func (b *Bulk) SetDeliveryId(deliveryId int) {
 	b.DeliveryId = deliveryId
-	b.Delivery.DeliveryId = deliveryId
+	b.Mail.DeliveryId = deliveryId
 }
 
 func (b *Bulk) SetFrom(email, name string) {
@@ -163,7 +163,7 @@ func (b *Bulk) Begin() error {
 		return fmt.Errorf("failed to unmarshal response: %v", err)
 	}
 	b.DeliveryId = response.DeliveryId
-	b.Delivery.DeliveryId = response.DeliveryId
+	b.Mail.DeliveryId = response.DeliveryId
 	return nil
 }
 
@@ -215,7 +215,7 @@ func (b *Bulk) Update() error {
 		return fmt.Errorf("failed to unmarshal response: %v", err)
 	}
 	b.DeliveryId = response.DeliveryId
-	b.Delivery.DeliveryId = response.DeliveryId
+	b.Mail.DeliveryId = response.DeliveryId
 	return nil
 }
 
